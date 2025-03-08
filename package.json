@@ -1,0 +1,15 @@
+{
+  "name": "Phreak Music Box",
+  "version": "0.0.1",
+  "description": "A simple musix box for all the phreaks out there.",
+  "main": "phreak.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ['dtmf', 'phreak', 'music'],
+  "author": "Jesse Riddle",
+  "license": "ISC",
+  "dependencies": {
+    "node-web-audio-api": "^1.0.3"
+  }
+}
