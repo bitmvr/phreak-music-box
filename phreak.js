@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-const { AudioContext } = require("node-web-audio-api");
-const fs = require('fs/promises');
+import { select, Separator } from '@inquirer/prompts';
+import { AudioContext } from 'node-web-audio-api';
+import fs from 'fs';
+import path from 'path';
 
 global.AudioContext = AudioContext;
 
@@ -25,8 +27,8 @@ var dtmf = {
 }
 
 async function playDTMF(key, duration){
-    highFrequency = parseInt(dtmf[key].hf);
-    lowFrequency = parseInt(dtmf[key].lf);
+    let highFrequency = parseInt(dtmf[key].hf);
+    let lowFrequency = parseInt(dtmf[key].lf);
     
     var audioCtx = new AudioContext();
     var oscillatorHigh = audioCtx.createOscillator();
@@ -57,13 +59,13 @@ function rest(duration) {
     return new Promise(resolve => setTimeout(resolve, duration * 1000));
 }
 
-async function loadSong(fileName) {
-    const data = await fs.readFile(fileName, 'utf8');
+let loadSong = (filename) => {
+    const data = fs.readFileSync(filename, { encoding: 'utf8' });
     return JSON.parse(data);
 }
 
 async function playSong(song) {
-    for (const note of song) {
+    for (const note of song.notes) {
         if (note.key) {
             await playDTMF(note.key, note.duration);
         } else if (note.rest) {
@@ -72,8 +74,42 @@ async function playSong(song) {
     }
 }
 
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const songs_dir = path.join(__dirname, 'songs');
+
+const get_song_files = (dir) => {
+    try {
+        const files = fs.readdirSync(dir);
+        return files.map(file => path.join(dir, file));
+    } catch (err) {
+        console.log(`Error scanning directory: ${err}`)
+        return [];
+    } 
+};
+
+const build_choices = (list_of_song_files) => {
+    let choices = [];
+    list_of_song_files.forEach((song_file) => {
+      const song_data = JSON.parse(fs.readFileSync(song_file, 'utf8'));
+      choices.push({
+        name: song_data.title,
+        value: song_file,
+        description: `Version: ${song_data.version}`
+      });
+    });
+    return choices;
+}
+
+let song_files = get_song_files(songs_dir);
+let song_choices = build_choices(song_files);
+
+const answer = await select({
+    message: 'Welcome to the Phreak Music Box. Pick a song below.',
+    choices: song_choices, 
+});
+
 async function main() {
-    const song = await loadSong('./songs/song_02.json'); // Specify the song file
+    const song = await loadSong(answer); // Specify the song file
     await playSong(song);
 }
 
