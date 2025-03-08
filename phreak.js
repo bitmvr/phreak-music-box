@@ -73,7 +73,7 @@ async function playSong(song) {
 }
 
 async function main() {
-    const song = await loadSong('song_02.json'); // Specify the song file
+    const song = await loadSong('./songs/song_02.json'); // Specify the song file
     await playSong(song);
 }
 
